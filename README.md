@@ -4,12 +4,13 @@ Esta es una API RESTful simple construida con FastAPI para procesar y recuperar 
 
 ## Características
 
+- **Autenticación por API Key**: Endpoints protegidos que requieren una clave en la cabecera `X-API-Key`.
 - **Creación de Mensajes**: Endpoint para recibir, validar, procesar y almacenar mensajes.
 - **Recuperación de Mensajes**: Endpoint para obtener mensajes por sesión, con paginación y filtrado.
 - **Validación de Datos**: Uso de Pydantic para una validación robusta de los datos de entrada.
-- **Procesamiento Simple**: Filtrado de palabras inapropiadas y adición de metadatos (conteo de palabras/caracteres).
+- **Procesamiento Simple**: Filtrado de palabras inapropiadas y adición de metadatos.
 - **Manejo de Errores**: Respuestas de error estandarizadas y claras.
-- **Pruebas Completas**: Pruebas unitarias y de integración con una cobertura superior al 95%.
+- **Pruebas Completas**: Cobertura de pruebas superior al 95%.
 - **Arquitectura Limpia**: Código organizado siguiendo principios de separación de responsabilidades.
 
 ## Stack Tecnológico
@@ -65,84 +66,46 @@ También puedes acceder a la documentación interactiva de Swagger UI en `http:/
 
 ## Documentación de la API
 
+### Autenticación
+
+Todos los endpoints de `/api/messages` requieren autenticación mediante una clave de API.
+Debes incluir la cabecera `X-API-Key` en todas tus peticiones.
+
+Para este proyecto, la clave es: `my-super-secret-key`
+
+> **Nota**: En un entorno de producción, esta clave debería cargarse de forma segura a través de variables de entorno o un servicio de gestión de secretos.
+
 ### 1. Crear un Mensaje
 
 - **Endpoint**: `POST /api/messages/`
 - **Descripción**: Crea, procesa y almacena un nuevo mensaje.
-- **Cuerpo de la Petición** (`JSON`):
-    ```json
-    {
-      "message_id": "msg-12345",
-      "session_id": "session-abcde",
-      "content": "Hola, este es un mensaje de prueba.",
-      "timestamp": "2023-10-27T10:00:00Z",
-      "sender": "user"
-    }
-    ```
 - **Ejemplo con `curl`**:
     ```bash
-    curl -X POST "http://127.0.0.1:8000/api/messages/" -H "Content-Type: application/json" -d '{
-      "message_id": "msg-12345",
-      "session_id": "session-abcde",
-      "content": "Hola, este es un mensaje de prueba.",
-      "timestamp": "2023-10-27T10:00:00Z",
-      "sender": "user"
-    }'
-    ```
-- **Respuesta Exitosa** (`201 Created`):
-    ```json
-    {
-      "status": "success",
-      "data": {
-        "message_id": "msg-12345",
-        "session_id": "session-abcde",
-        "content": "Hola, este es un mensaje de prueba.",
-        "timestamp": "2023-10-27T10:00:00Z",
-        "sender": "user",
-        "metadata": {
-          "word_count": 7,
-          "character_count": 35,
-          "processed_at": "2023-10-27T10:00:01Z"
-        }
-      }
-    }
+    curl -X POST "http://127.0.0.1:8000/api/messages/" \
+         -H "Content-Type: application/json" \
+         -H "X-API-Key: my-super-secret-key" \
+         -d '{
+           "message_id": "msg-12345",
+           "session_id": "session-abcde",
+           "content": "Hola, este es un mensaje de prueba.",
+           "timestamp": "2023-10-27T10:00:00Z",
+           "sender": "user"
+         }'
     ```
 
 ### 2. Recuperar Mensajes de una Sesión
 
 - **Endpoint**: `GET /api/messages/{session_id}`
-- **Descripción**: Obtiene todos los mensajes de una sesión específica. Soporta paginación y filtrado.
-- **Parámetros de Consulta**:
-    - `sender` (opcional): Filtra los mensajes por `user` o `system`.
-    - `skip` (opcional, default `0`): Número de mensajes a saltar (para paginación).
-    - `limit` (opcional, default `100`): Número máximo de mensajes a devolver.
+- **Descripción**: Obtiene todos los mensajes de una sesión específica.
 - **Ejemplo con `curl`**:
     ```bash
     # Obtener todos los mensajes de la sesión 'session-abcde'
-    curl -X GET "http://127.0.0.1:8000/api/messages/session-abcde"
+    curl -X GET "http://127.0.0.1:8000/api/messages/session-abcde" \
+         -H "X-API-Key: my-super-secret-key"
 
     # Obtener solo los mensajes del usuario y con paginación
-    curl -X GET "http://127.0.0.1:8000/api/messages/session-abcde?sender=user&skip=0&limit=10"
-    ```
-- **Respuesta Exitosa** (`200 OK`):
-    ```json
-    {
-      "status": "success",
-      "data": [
-        {
-          "message_id": "msg-12345",
-          "session_id": "session-abcde",
-          "content": "Hola, este es un mensaje de prueba.",
-          "timestamp": "2023-10-27T10:00:00Z",
-          "sender": "user",
-          "metadata": {
-            "word_count": 7,
-            "character_count": 35,
-            "processed_at": "2023-10-27T10:00:01Z"
-          }
-        }
-      ]
-    }
+    curl -X GET "http://127.0.0.1:8000/api/messages/session-abcde?sender=user&skip=0&limit=10" \
+         -H "X-API-Key: my-super-secret-key"
     ```
 
 ---
@@ -155,5 +118,4 @@ Para ejecutar el conjunto de pruebas y ver el informe de cobertura, asegúrate d
 # Ejecutar pruebas y mostrar cobertura en la terminal
 pytest --cov=app --cov-report=term-missing
 ```
-
-Esto correrá todas las pruebas unitarias y de integración, y al final mostrará un resumen de la cobertura de código para el directorio `app`.
+```

@@ -1,12 +1,16 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from .. import schemas, services
-from ..dependencies import get_db
+from ..dependencies import get_db, get_api_key
 
 router = APIRouter(
     prefix="/api/messages",
     tags=["messages"],
-    responses={422: {"model": schemas.ErrorResponse}},
+    dependencies=[Depends(get_api_key)],
+    responses={
+        401: {"description": "Clave de API inválida o faltante"},
+        422: {"model": schemas.ErrorResponse}
+    },
 )
 
 @router.post(
