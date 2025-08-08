@@ -16,7 +16,8 @@ spec:
     spec:
       containers:
       - name: fastapi-app
-        image: fastapi-chat-api:latest # Usaremos la imagen que construimos con Docker
+        image: fastapi-chat-api:latest
+        imagePullPolicy: Never # Forzar a Kubernetes a usar la imagen local
         ports:
         - containerPort: 8000
         env:
