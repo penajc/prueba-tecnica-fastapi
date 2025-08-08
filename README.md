@@ -108,6 +108,25 @@ Para este proyecto, la clave es: `my-super-secret-key`
          -H "X-API-Key: my-super-secret-key"
     ```
 
+### 3. Buscar Mensajes por Contenido
+
+- **Endpoint**: `GET /api/messages/search`
+- **Descripción**: Busca mensajes por contenido de texto, con paginación.
+- **Parámetros de Consulta**:
+    - `query` (obligatorio): El texto a buscar en el contenido de los mensajes.
+    - `skip` (opcional, default `0`): Número de mensajes a saltar (para paginación).
+    - `limit` (opcional, default `100`): Número máximo de mensajes a devolver.
+- **Ejemplo con `curl`**:
+    ```bash
+    # Buscar mensajes que contengan la palabra "hola"
+    curl -X GET "http://127.0.0.1:8000/api/messages/search?query=hola" \
+         -H "X-API-Key: my-super-secret-key"
+
+    # Buscar mensajes que contengan "prueba" y paginar
+    curl -X GET "http://127.0.0.1:8000/api/messages/search?query=prueba&limit=5&skip=0" \
+         -H "X-API-Key: my-super-secret-key"
+    ```
+
 ---
 
 ## Cómo Ejecutar las Pruebas

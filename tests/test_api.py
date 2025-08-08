@@ -90,3 +90,37 @@ def test_read_messages_pagination(client: TestClient):
     assert response.status_code == 200
     data = response.json()
     assert len(data["data"]) == 2
+
+# --- Pruebas para el endpoint GET /api/messages/search ---
+
+def test_search_messages_by_content(client: TestClient):
+    """Prueba la búsqueda de mensajes por contenido."""
+    client.post("/api/messages/", headers=HEADERS, json={"message_id": "search-msg-1", "session_id": "s5", "content": "Hola mundo de la búsqueda", "timestamp": datetime.utcnow().isoformat() + "Z", "sender": "user"})
+    client.post("/api/messages/", headers=HEADERS, json={"message_id": "search-msg-2", "session_id": "s5", "content": "Otro mensaje para buscar", "timestamp": datetime.utcnow().isoformat() + "Z", "sender": "system"})
+    client.post("/api/messages/", headers=HEADERS, json={"message_id": "search-msg-3", "session_id": "s6", "content": "Mundo feliz", "timestamp": datetime.utcnow().isoformat() + "Z", "sender": "user"})
+
+    response = client.get("/api/messages/search?query=mundo", headers=HEADERS)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "success"
+    assert len(data["data"]) == 2
+    assert any("Hola mundo" in msg["content"] for msg in data["data"])
+    assert any("Mundo feliz" in msg["content"] for msg in data["data"])
+
+def test_search_messages_case_insensitive(client: TestClient):
+    """Prueba que la búsqueda es insensible a mayúsculas y minúsculas."""
+    client.post("/api/messages/", headers=HEADERS, json={"message_id": "search-msg-4", "session_id": "s7", "content": "Mensaje con PALABRA", "timestamp": datetime.utcnow().isoformat() + "Z", "sender": "user"})
+
+    response = client.get("/api/messages/search?query=palabra", headers=HEADERS)
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data["data"]) == 1
+    assert "Mensaje con PALABRA" in data["data"][0]["content"]
+
+def test_search_messages_no_results(client: TestClient):
+    """Prueba que la búsqueda no devuelve resultados si no hay coincidencias."""
+    response = client.get("/api/messages/search?query=nomatch", headers=HEADERS)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "success"
+    assert len(data["data"]) == 0

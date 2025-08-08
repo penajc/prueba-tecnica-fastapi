@@ -24,3 +24,8 @@ def get_messages_by_session(db: Session, session_id: str, sender: str | None, sk
         query = query.filter(models.Message.sender == sender)
         
     return query.offset(skip).limit(limit).all()
+
+def search_messages_by_content(db: Session, query_text: str, skip: int = 0, limit: int = 100):
+    return db.query(models.Message).filter(
+        models.Message.content.ilike(f"%{query_text}%")
+    ).offset(skip).limit(limit).all()

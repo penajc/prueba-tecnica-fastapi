@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Query
 from sqlalchemy.orm import Session
 from .. import schemas, services
 from ..dependencies import get_db, get_api_key
@@ -39,6 +39,36 @@ def create_message_endpoint(
     )
     
     return schemas.MessageResponse(data=response_data)
+
+@router.get("/search", response_model=schemas.MessagesResponse)
+def search_messages_endpoint(
+    query: str = Query(..., min_length=1, description="Texto a buscar en el contenido de los mensajes"),
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+):
+    """Busca mensajes por contenido, con paginación."""
+    db_messages = services.search_messages(
+        db=db, query_text=query, skip=skip, limit=limit
+    )
+
+    response_data = [
+        schemas.Message(
+            message_id=msg.message_id,
+            session_id=msg.session_id,
+            content=msg.content,
+            timestamp=msg.timestamp,
+            sender=msg.sender,
+            metadata=schemas.MessageMetadata(
+                word_count=msg.word_count,
+                character_count=msg.character_count,
+                processed_at=msg.processed_at,
+            ),
+        )
+        for msg in db_messages
+    ]
+
+    return schemas.MessagesResponse(data=response_data)
 
 @router.get("/{session_id}", response_model=schemas.MessagesResponse)
 def read_messages_endpoint(

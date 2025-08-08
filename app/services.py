@@ -36,3 +36,11 @@ def get_messages(
     return crud.get_messages_by_session(
         db=db, session_id=session_id, sender=sender, skip=skip, limit=limit
     )
+
+def search_messages(
+    db: Session, query_text: str, skip: int = 0, limit: int = 100
+) -> list[models.Message]:
+    """Busca mensajes por contenido con paginación."""
+    return crud.search_messages_by_content(
+        db=db, query_text=query_text, skip=skip, limit=limit
+    )
