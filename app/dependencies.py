@@ -1,5 +1,7 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import APIKeyHeader
+from fastapi_limiter import FastAPILimiter
+from fastapi_limiter.depends import RateLimiter
 
 from .database import SessionLocal
 
@@ -23,3 +25,6 @@ def get_api_key(api_key_header: str = Depends(api_key_header_scheme)):
             detail="Clave de API inválida o faltante",
         )
     return api_key_header
+
+# Use RateLimiter as a dependency - this is the correct way
+rate_limit_dependency = RateLimiter(times=5, seconds=60)

@@ -1,10 +1,16 @@
-from fastapi import FastAPI, Request, status
+import os
+from fastapi import FastAPI, Request, status, Depends
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
+from redis.asyncio import Redis
+from fastapi_limiter import FastAPILimiter
+from fastapi_limiter.depends import RateLimiter # Add this import
 
 from .database import create_db_and_tables
 from .routers import messages
+from .routers import websocket # Add websocket
 from .schemas import ErrorResponse, ErrorDetail
+from .dependencies import rate_limit_dependency  # Add this import
 
 # En una app de producción, esto se manejaría con Alembic o un script de inicialización
 create_db_and_tables()
@@ -14,6 +20,12 @@ app = FastAPI(
     description="Una API para procesar y recuperar mensajes de chat.",
     version="1.0.0",
 )
+
+@app.on_event("startup")
+async def startup():
+    redis_host = os.getenv("REDIS_HOST", "localhost")
+    redis = Redis(host=redis_host, port=6379, db=0, encoding="utf-8", decode_responses=True)
+    await FastAPILimiter.init(redis)
 
 # Manejador de errores de validación personalizado
 @app.exception_handler(RequestValidationError)
@@ -35,7 +47,12 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 app.include_router(messages.router)
+app.include_router(websocket.router)
+
+@app.on_event("shutdown")
+async def shutdown():
+    await FastAPILimiter.close()
 
 @app.get("/")
-def read_root():
+async def read_root(request: Request, rate_limiter: RateLimiter = Depends(rate_limit_dependency)):
     return {"message": "Bienvenido a la API de Mensajes de Chat"}

@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: fastapi-app-service
+spec:
+  selector:
+    app: fastapi-app
+  ports:
+    - protocol: TCP
+      port: 80 # Puerto del servicio
+      targetPort: 8000 # Puerto del contenedor
+  type: LoadBalancer # Esto creará un Load Balancer en la nube (ej. ALB en AWS)

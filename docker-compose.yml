@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+    environment:
+      # Asegúrate de que la aplicación se conecte al servicio 'redis'
+      # en lugar de 'localhost' cuando se ejecuta en Docker Compose
+      REDIS_HOST: redis
+
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379" # Opcional: exponer el puerto de Redis si necesitas accederlo desde fuera de Docker Compose

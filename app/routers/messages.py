@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, status, Query
 from sqlalchemy.orm import Session
 from .. import schemas, services
-from ..dependencies import get_db, get_api_key
+from ..dependencies import get_db, get_api_key, rate_limit_dependency  # Add rate_limit_dependency import
+from app.routers.websocket import manager # Import the WebSocket manager
 
 router = APIRouter(
     prefix="/api/messages",
@@ -16,9 +17,10 @@ router = APIRouter(
 @router.post(
     "/", 
     response_model=schemas.MessageResponse, 
-    status_code=status.HTTP_201_CREATED
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(rate_limit_dependency)]  # This is already present and correct
 )
-def create_message_endpoint(
+async def create_message_endpoint(
     message: schemas.MessageCreate, db: Session = Depends(get_db)
 ):
     """Recibe, procesa y almacena un nuevo mensaje."""
@@ -38,6 +40,9 @@ def create_message_endpoint(
         ),
     )
     
+    # Transmitir el nuevo mensaje a todos los clientes WebSocket conectados
+    await manager.broadcast(response_data.model_dump_json())
+
     return schemas.MessageResponse(data=response_data)
 
 @router.get("/search", response_model=schemas.MessagesResponse)

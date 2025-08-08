@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fastapi-app-deployment
+  labels:
+    app: fastapi-app
+spec:
+  replicas: 2 # Podemos empezar con 2 réplicas para alta disponibilidad
+  selector:
+    matchLabels:
+      app: fastapi-app
+  template:
+    metadata:
+      labels:
+        app: fastapi-app
+    spec:
+      containers:
+      - name: fastapi-app
+        image: fastapi-chat-api:latest # Usaremos la imagen que construimos con Docker
+        ports:
+        - containerPort: 8000
+        env:
+        - name: REDIS_HOST
+          value: redis-service # El nombre del servicio de Redis en Kubernetes
+        # Añadir variables de entorno para la clave de API en un entorno real
+        # - name: API_KEY_SECRET
+        #   valueFrom: 
+        #     secretKeyRef:
+        #       name: api-keys-secret
+        #       key: api_key

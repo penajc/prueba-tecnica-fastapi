@@ -124,3 +124,22 @@ def test_search_messages_no_results(client: TestClient):
     data = response.json()
     assert data["status"] == "success"
     assert len(data["data"]) == 0
+
+def test_validation_error_handler(client: TestClient):
+    """Prueba que el manejador de errores de validación personalizado funciona."""
+    response = client.post(
+        "/api/messages/",
+        headers=HEADERS,
+        json={
+            "message_id": "test-msg-invalid",
+            "session_id": "test-session-invalid",
+            "content": "Contenido de prueba",
+            "timestamp": "invalid-timestamp", # Esto debería causar un error de validación
+            "sender": "user",
+        },
+    )
+    assert response.status_code == 422
+    data = response.json()
+    assert data["error"]["code"] == "INVALID_FORMAT"
+    assert "Error de validación en el campo 'timestamp'" in data["error"]["message"]
+    assert "Input should be a valid datetime or date, invalid character in year" in data["error"]["details"]
